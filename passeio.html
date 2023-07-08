@@ -9,28 +9,70 @@
 	<script src="passeio.js"></script>
 
 	<script id="vertex-shader" type="notjs">
+
 		attribute vec4 position;
 		attribute vec2 texCoord;
+		attribute vec3 normal;
+
 		uniform mat4 transf;
+		uniform vec3 lightPos;
+		uniform vec3 camPos;
 
 		varying vec2 v_texCoord;
+		varying vec3 v_normal;
+		varying vec3 pointToLight;
+		varying vec3 pointToCam;
 
 		void main()
 		{
+			pointToLight = lightPos - position.xyz;
+			pointToCam = camPos - position.xyz;
+			v_normal = normal;
 			v_texCoord = texCoord;
 			gl_Position = transf*position;
 		}
 	</script>
 
 	<script id="frag-shader" type="notjs">
+
 		precision mediump float;
+
 		uniform sampler2D tex;
+		uniform vec3 lightDirection;
 
 		varying vec2 v_texCoord;
+		varying vec3 v_normal;
+		varying vec3 pointToLight;
+		varying vec3 pointToCam;
 
 		void main()
 		{
-			gl_FragColor = texture2D(tex, v_texCoord);
+			vec3 pToLight = normalize(pointToLight);
+			vec3 pToCam = normalize(pointToCam);
+
+			vec3 halfVec = normalize(pToCam + pToLight);
+
+			vec3 v_normal_n = normalize(v_normal);
+			vec3 lightDirection_n = normalize(-lightDirection);
+
+			float lightd = dot(v_normal_n, lightDirection_n);
+			float lightp = dot(v_normal_n, pToLight);
+			float lighte = dot(v_normal_n, halfVec);
+
+			if(lightd < 0.0) lightd = 0.0;
+			if(lightp < 0.0) lightp = 0.0;
+			if(lighte < 0.0) lighte = 0.0;
+
+			// Modelo de reflexão de Phong:
+			// Ambiente:
+			gl_FragColor = 0.3 * texture2D(tex, v_texCoord);
+			// Direcional:
+			gl_FragColor += 0.2 * lightd * texture2D(tex, v_texCoord);
+			// Pontual:
+			gl_FragColor += 0.7 * lightp * texture2D(tex, v_texCoord);
+			// Especutar:
+			gl_FragColor += 0.3 * pow(lighte, 300.0) * texture2D(tex, v_texCoord);
+			gl_FragColor.a = 1.0;
 		}
 	</script>
 

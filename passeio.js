@@ -3,6 +3,8 @@ var texSrc = ["cimentoq.jpg", "tijolo.jpg", "piso.jpg", "branco.png", "madeira.p
 var loadTexs = 0;
 var gl;
 var prog;
+var camPos = [2, 1.5, 5.0];
+var lightPos = [2, 2.5, 2.5];
 var xFoco = 0;
 var zFoco = 0;
 var xCam = 0;
@@ -134,6 +136,74 @@ function configScene() {
                                         //lido (2 floats, ou seja, 2*4 bytes = 8 bytes)
                             3*4       //salto inicial (em bytes)
                             );
+
+    // --------------------------- ILUMINAÇÃO ------------------------------------------------
+
+    var normalsTriangles = new Float32Array([
+
+        // Parede (Sul, Norte, Leste e Oeste)
+        0, 0, 1,    0, 0, 1,    0, 0, 1,    0, 0, 1,    0, 0, 1,
+        0, 0, -1,   0, 0, -1,   0, 0, -1,   0, 0, -1,   0, 0, -1,
+        1, 0, 0,    1, 0, 0,    1, 0, 0,    1, 0, 0,    1, 0, 0,
+        -1, 0, 0,   -1, 0, 0,   -1, 0, 0,   -1, 0, 0,   -1, 0, 0,
+        // Chão
+        0, 1, 0,    0, 1, 0,    0, 1, 0,    0, 1, 0,    0, 1, 0,
+        // Teto
+        0, -1, 0,   0, -1, 0,   0, -1, 0,   0, -1, 0,   0, -1, 0,
+
+        // Cama (Cima, Esquerda, Frente e Direita)
+        0, 1, 0,    0, 1, 0,    0, 1, 0,    0, 1, 0,    0, 1, 0,
+        0, 0, -1,   0, 0, -1,   0, 0, -1,   0, 0, -1,   0, 0, -1,
+        -1, 0, 0,   -1, 0, 0,   -1, 0, 0,   -1, 0, 0,   -1, 0, 0,
+        0, 0, 1,    0, 0, 1,    0, 0, 1,    0, 0, 1,    0, 0, 1,
+
+        // Bancada (Cima, Frente e Baixo)
+        0, 1, 0,    0, 1, 0,    0, 1, 0,    0, 1, 0,    0, 1, 0,
+        1, 0, 0,    1, 0, 0,    1, 0, 0,    1, 0, 0,    1, 0, 0,
+        0, -1, 0,   0, -1, 0,   0, -1, 0,   0, -1, 0,   0, -1, 0,
+
+        // Janela (Esquadria, Divisão e Paisagem)
+        1, 0, 0,    1, 0, 0,    1, 0, 0,    1, 0, 0,    1, 0, 0,
+        1, 0, 0,    1, 0, 0,    1, 0, 0,    1, 0, 0,    1, 0, 0,
+        1, 0, 0,    1, 0, 0,    1, 0, 0,    1, 0, 0,    1, 0, 0,
+
+        // Ventilador (Eixo e Pás)
+        0, 0, 1,    0, 0, 1,    0, 0, 1,    0, 0, 1,    0, 0, 1,
+        1, 0, 0,    1, 0, 0,    1, 0, 0,    1, 0, 0,    1, 0, 0,
+        0, 0, -1,   0, 0, -1,   0, 0, -1,   0, 0, -1,   0, 0, -1,
+        -1, 0, 0,   -1, 0, 0,   -1, 0, 0,   -1, 0, 0,   -1, 0, 0,
+
+        0, -1, 0,   0, -1, 0,   0, -1, 0,   0, -1, 0,   0, -1, 0,
+        0, -1, 0,   0, -1, 0,   0, -1, 0,   0, -1, 0,   0, -1, 0
+    ]);
+    
+    //Cria buffer na GPU e copia normais para ele
+    var bufNormalPtr = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufNormalPtr);
+    gl.bufferData(gl.ARRAY_BUFFER, normalsTriangles, gl.STATIC_DRAW);
+    
+    //Pega ponteiro para o atributo "normal" do vertex shader
+    var normalPtr = gl.getAttribLocation(prog, "normal");
+    gl.enableVertexAttribArray(normalPtr);
+    //Especifica a cópia dos valores do buffer para o atributo
+    gl.vertexAttribPointer(normalPtr, 
+                            3,        //quantidade de dados em cada processamento
+                            gl.FLOAT, //tipo de cada dado (tamanho)
+                            false,    //não normalizar
+                            0,      //tamanho do bloco de dados a processar em cada passo
+                                        //0 indica que o tamanho do bloco é igual a tamanho
+                                        //lido (2 floats, ou seja, 2*4 bytes = 8 bytes)
+                            0         //salto inicial (em bytes)
+                            );
+
+    var lightDirectionPtr = gl.getUniformLocation(prog, "lightDirection");
+    gl.uniform3fv(lightDirectionPtr, [1, -0.3, 0.3]);
+
+    var lightPosPtr = gl.getUniformLocation(prog, "lightPos");
+    gl.uniform3fv(lightPosPtr, lightPos);
+
+    var camPosPtr = gl.getUniformLocation(prog, "camPos");
+    gl.uniform3fv(camPosPtr, camPos);
                             
     submitTexs()
 }  
@@ -141,7 +211,8 @@ function configScene() {
 function draw()
 {
     var mproj = createPerspective(wheel+70, gl.canvas.width/gl.canvas.height, 1, 50);
-    var cam = createCamera([xCam+2, 1.5, zCam+5.0], [xFoco+2, 1.5, zFoco+0], [xCam+2, 2.5, zCam+5.0]);
+    camPos = [xCam+2, 1.5, zCam+5.0];
+    var cam = createCamera(camPos, [xFoco+2, 1.5, zFoco+0], [xCam+2, 2.5, zCam+5.0]);
 
     var mattransida = math.matrix(
         [[1.0, 0.0, 0.0, -2.0],
