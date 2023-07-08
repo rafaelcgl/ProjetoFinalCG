@@ -1,0 +1,7 @@
+.center {
+    position: absolute;
+    top: 50%;
+    transform: translate(45%, -50%);
+    padding: 10px;
+    width: 50%;
+}

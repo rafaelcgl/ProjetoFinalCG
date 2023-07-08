@@ -1,0 +1,43 @@
+<html>
+
+	<head>
+		<title>Passeio Virtual Quarto</title>
+		<link rel="stylesheet" href="webgl.css">
+	</head>
+
+	<script src="math.js"></script>
+	<script src="webgl.js"></script>
+
+	<script id="vertex-shader" type="notjs">
+		attribute vec4 position;
+		attribute vec2 texCoord;
+		uniform mat4 transf;
+
+		varying vec2 v_texCoord;
+
+		void main()
+		{
+			v_texCoord = texCoord;
+			gl_Position = transf*position;
+		}
+	</script>
+
+	<script id="frag-shader" type="notjs">
+		precision mediump float;
+		uniform sampler2D tex;
+
+		varying vec2 v_texCoord;
+
+		void main()
+		{
+			gl_FragColor = texture2D(tex, v_texCoord);
+		}
+	</script>
+
+	<body onload="init()">
+		<div class="center">
+			<canvas id="canvas1" width="1000" height="600"></canvas>
+		</div>
+	</body>
+
+</html>
