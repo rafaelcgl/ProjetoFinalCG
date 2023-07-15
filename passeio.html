@@ -16,16 +16,19 @@
 
 		uniform mat4 transf;
 		uniform vec3 lightPos;
+		uniform vec3 lightPos2;
 		uniform vec3 camPos;
 
 		varying vec2 v_texCoord;
 		varying vec3 v_normal;
 		varying vec3 pointToLight;
+		varying vec3 pointToLight2;
 		varying vec3 pointToCam;
 
 		void main()
 		{
 			pointToLight = lightPos - position.xyz;
+			pointToLight2 = lightPos2 - position.xyz;
 			pointToCam = camPos - position.xyz;
 			v_normal = normal;
 			v_texCoord = texCoord;
@@ -43,11 +46,13 @@
 		varying vec2 v_texCoord;
 		varying vec3 v_normal;
 		varying vec3 pointToLight;
+		varying vec3 pointToLight2;
 		varying vec3 pointToCam;
 
 		void main()
 		{
 			vec3 pToLight = normalize(pointToLight);
+			vec3 pToLight2 = normalize(pointToLight2);
 			vec3 pToCam = normalize(pointToCam);
 
 			vec3 halfVec = normalize(pToCam + pToLight);
@@ -57,10 +62,12 @@
 
 			float lightd = dot(v_normal_n, lightDirection_n);
 			float lightp = dot(v_normal_n, pToLight);
+			float lightp2 = dot(v_normal_n, pToLight2);
 			float lighte = dot(v_normal_n, halfVec);
 
 			if(lightd < 0.0) lightd = 0.0;
 			if(lightp < 0.0) lightp = 0.0;
+			if(lightp2 < 0.0) lightp2 = 0.0;
 			if(lighte < 0.0) lighte = 0.0;
 
 			// Modelo de reflexão de Phong:
@@ -69,9 +76,10 @@
 			// Direcional:
 			gl_FragColor += 0.2 * lightd * texture2D(tex, v_texCoord);
 			// Pontual:
-			gl_FragColor += 0.7 * lightp * texture2D(tex, v_texCoord);
-			// Especutar:
-			gl_FragColor += 0.3 * pow(lighte, 300.0) * texture2D(tex, v_texCoord);
+			gl_FragColor += 0.5 * lightp * texture2D(tex, v_texCoord);
+			gl_FragColor += 0.4 * lightp2 * texture2D(tex, v_texCoord);
+			// Especular:
+			gl_FragColor += 0.2 * pow(lighte, 300.0) * texture2D(tex, v_texCoord);
 			gl_FragColor.a = 1.0;
 		}
 	</script>

@@ -5,12 +5,15 @@ var gl;
 var prog;
 var camPos = [2, 1.5, 5.0];
 var lightPos = [2, 2.5, 2.5];
+var lightPos2 = [0.5, 3, 0.5];
 var xFoco = 0;
 var zFoco = 0;
 var xCam = 0;
 var zCam = 0;
 var wheel = 0;
 var angle = 0;
+var posVar = 0;
+var dir = true;
 
 function init() {
     for (i = 0; i < texSrc.length; i++) {
@@ -32,7 +35,6 @@ function loadTextures() {
     }
 }
 
-
 function initGL() {
 	var canvas = document.getElementById("canvas1");
 	gl = getGL(canvas);
@@ -48,7 +50,7 @@ function initGL() {
         
         gl.useProgram(prog);
 
-        //Inicializa área de desenho: viewport e cor de limpeza; limpa a tela
+        // Inicializa área de desenho: viewport e cor de limpeza; limpa a tela
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
         gl.clearColor(0, 0, 0, 1);
         gl.enable( gl.BLEND );
@@ -210,6 +212,10 @@ function configScene() {
 
 function draw()
 {
+    lightPos2 = [0.5 + posVar, 3, 0.5];
+    var lightPos2Ptr = gl.getUniformLocation(prog, "lightPos2");
+    gl.uniform3fv(lightPos2Ptr, lightPos2);
+
     var mproj = createPerspective(wheel+70, gl.canvas.width/gl.canvas.height, 1, 50);
     camPos = [xCam+2, 1.5, zCam+5.0];
     var cam = createCamera(camPos, [xFoco+2, 1.5, zFoco+0], [xCam+2, 2.5, zCam+5.0]);
@@ -334,6 +340,21 @@ function draw()
 
     angle++;
     angle++;
+
+    if ((0.5 + posVar) > 3.5 && dir) {
+        posVar = posVar - 0.05;
+        dir = false;
+    }
+    if ((0.5 + posVar) < 0.5 && !dir) {
+        posVar = posVar + 0.05;
+        dir = true;
+    }
+    if (dir) {
+        posVar = posVar + 0.05;
+    }
+    else {
+        posVar = posVar - 0.05;
+    }
     requestAnimationFrame(draw);
 }
 
