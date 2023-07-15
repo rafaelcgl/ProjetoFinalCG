@@ -76,7 +76,7 @@
 			// Direcional:
 			gl_FragColor += 0.2 * lightd * texture2D(tex, v_texCoord);
 			// Pontual:
-			gl_FragColor += 0.5 * lightp * texture2D(tex, v_texCoord);
+			gl_FragColor += 0.4 * lightp * texture2D(tex, v_texCoord);
 			gl_FragColor += 0.4 * lightp2 * texture2D(tex, v_texCoord);
 			// Especular:
 			gl_FragColor += 0.2 * pow(lighte, 300.0) * texture2D(tex, v_texCoord);
